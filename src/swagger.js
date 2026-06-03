@@ -20,7 +20,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://api.example.com',
+        url: 'https://jeme-technologies.onrender.com',
         description: 'Production server',
       },
     ],
