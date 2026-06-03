@@ -39,8 +39,11 @@ app.use((err, _req, res, _next) => {
 });
 
 
-app.listen(port, () => {
-  console.log(`[Server] Customer Sync API running on port ${port}`);
-  console.log(`Docs available at http://localhost:${port}/api-docs`);
-
-});
+if (require.main === module) {
+  // Only starts a local server when run directly (node src/index.js)
+  app.listen(port, () => {
+    console.log(`[Server] running on port ${port}`);
+    console.log(`[Server] environment: ${config.environment}`);
+    console.log(`[Server] API docs available at http://localhost:${port}/api-docs`);
+  });
+}
