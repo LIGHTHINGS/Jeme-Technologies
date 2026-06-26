@@ -287,13 +287,14 @@ router.post('/create', async (req, res) => {
     const kycValue = KYC_STATUS_MAP[kycRaw] || 'pending';
     const custTypeRaw   = (CustomerType || 'individual').trim().toLowerCase();
     const custTypeValue = CATEGORY_MAP[custTypeRaw] || 'ind';
+    const taxId = (custTypeValue === 'corp') ? (req.body.TaxId || '').trim() : false;
     const partnerId = await odoo.create('res.partner', {
       name:                              `${FirstName.trim()} ${LastName.trim()}`,
       email,
       phone:                             PhoneNumber.trim(),
       street:                            Address?.trim()      || false,
       [odooConfig.fields.kycStatus]:     kycValue,
-      [odooConfig.fields.customerType]:  custTypeValue,
+      [odooConfig.fields.customerType]:  custTypeValue, vat: taxId || false,
       customer_rank:                     1,
     });
 
@@ -414,7 +415,7 @@ router.post('/create', async (req, res) => {
  *               error: "An unexpected error occurred. Check the server logs."
  */
 router.post('/update-details', async (req, res) => {
-  const { CustomerEmail, FirstName, LastName, PhoneNumber, Address, CustomerType } = req.body;
+  const { CustomerEmail, FirstName, LastName, PhoneNumber, Address, CustomerType, TaxId } = req.body;
 
   const email = (CustomerEmail || '').trim().toLowerCase();
   if (!email) {
@@ -450,11 +451,12 @@ router.post('/update-details', async (req, res) => {
     if (PhoneNumber?.trim())  updates.phone                             = PhoneNumber.trim();
     if (Address?.trim())      updates.street                            = Address.trim();
     if (CustomerType?.trim()) updates[odooConfig.fields.customerType]   = CATEGORY_MAP[custTypeRaw] || 'ind';
+    if (TaxId?.trim())        updates[odooConfig.fields.vat]        = TaxId.trim();
 
     if (!Object.keys(updates).length) {
       return res.status(400).json({
         success: false,
-        error: 'No updatable fields were provided. Accepted: FirstName + LastName, PhoneNumber, Address, CustomerType.',
+        error: 'No updatable fields were provided. Accepted: FirstName + LastName, PhoneNumber, Address, CustomerType, TaxId.',
       });
     }
 
