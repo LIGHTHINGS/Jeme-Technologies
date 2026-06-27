@@ -287,7 +287,7 @@ router.post('/create', async (req, res) => {
     const kycValue = KYC_STATUS_MAP[kycRaw] || 'pending';
     const custTypeRaw   = (CustomerType || 'individual').trim().toLowerCase();
     const custTypeValue = CATEGORY_MAP[custTypeRaw] || 'ind';
-    const taxId = (custTypeValue === 'corp') ? (req.body.TaxId || '').trim() : false;
+    const taxId = req.body.TaxId?.trim() || false;
     const partnerId = await odoo.create('res.partner', {
       name:                              `${FirstName.trim()} ${LastName.trim()}`,
       email,
@@ -295,6 +295,7 @@ router.post('/create', async (req, res) => {
       street:                            Address?.trim()      || false,
       [odooConfig.fields.kycStatus]:     kycValue,
       [odooConfig.fields.customerType]:  custTypeValue, vat: taxId || false,
+      is_company:                       custTypeValue === 'corp',
       customer_rank:                     1,
     });
 
@@ -450,7 +451,10 @@ router.post('/update-details', async (req, res) => {
 
     if (PhoneNumber?.trim())  updates.phone                             = PhoneNumber.trim();
     if (Address?.trim())      updates.street                            = Address.trim();
-    if (CustomerType?.trim()) updates[odooConfig.fields.customerType]   = CATEGORY_MAP[custTypeRaw] || 'ind';
+    if (CustomerType?.trim()) {
+      updates[odooConfig.fields.customerType] = CATEGORY_MAP[custTypeRaw] || 'ind';
+      updates.is_company                      = (CATEGORY_MAP[custTypeRaw] || 'ind') === 'corp';
+    }
     if (TaxId?.trim())        updates[odooConfig.fields.vat]        = TaxId.trim();
 
     if (!Object.keys(updates).length) {
